@@ -1,0 +1,6 @@
+[submodule "libs/system-sdk"]
+	path = libs/system-sdk
+	url = https://github.com/zig-gamedev/system-sdk.git
+[submodule "libs/string"]
+	path = libs/string
+	url = https://github.com/JakubSzark/zig-string.git

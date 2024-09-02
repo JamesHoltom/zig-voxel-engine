@@ -1,0 +1,6 @@
+.zig-cache/
+assets/
+scratch/
+zig-out/
+.lfs-content-token
+imgui.ini

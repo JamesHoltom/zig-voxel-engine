@@ -1,0 +1,19 @@
+.{
+    .name = "zig-voxel-engine",
+    .version = "0.0.1",
+    .dependencies = .{
+        .string = .{ .path = "libs/string" },
+        .system_sdk = .{ .path = "libs/system-sdk" },
+        .zglfw = .{ .path = "libs/zglfw" },
+        .zgui = .{ .path = "libs/zgui" },
+        .zmath = .{ .path = "libs/zmath" },
+        .zopengl = .{ .path = "libs/zopengl" },
+        .zpool = .{ .path = "libs/zpool" },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "libs",
+        "src",
+    },
+}
