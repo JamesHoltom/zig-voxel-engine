@@ -146,6 +146,9 @@ pub fn rawMouseMotionSupported() bool {
 }
 extern fn glfwRawMouseMotionSupported() i32;
 
+pub const getKeyName = glfwGetKeyName;
+extern fn glfwGetKeyName(key: Key, scancode: i32) ?[*:0]const u8;
+
 pub const makeContextCurrent = glfwMakeContextCurrent;
 extern fn glfwMakeContextCurrent(window: *Window) void;
 

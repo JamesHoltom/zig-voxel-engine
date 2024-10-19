@@ -1,5 +1,7 @@
 .zig-cache/
-assets/
+kanpilot.toml
+logs/
+planning/
 scratch/
 zig-out/
 .lfs-content-token

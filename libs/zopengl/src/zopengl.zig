@@ -673,8 +673,28 @@ pub fn loadCoreProfile(loader: LoaderFn, major: u32, minor: u32) !void {
         // TODO
 
         // [JH] Added for use in project.
+        try load("glCreateVertexArrays", .{&bindings.createVertexArrays});
         try load("glEnableVertexArrayAttrib", .{&bindings.enableVertexArrayAttrib});
         try load("glDisableVertexArrayAttrib", .{&bindings.disableVertexArrayAttrib});
+        try load("glVertexArrayVertexBuffer", .{&bindings.vertexArrayVertexBuffer});
+        try load("glVertexArrayVertexBuffers", .{&bindings.vertexArrayVertexBuffers});
+        try load("glVertexArrayElementBuffer", .{&bindings.vertexArrayElementBuffer});
+        try load("glVertexArrayAttribBinding", .{&bindings.vertexArrayAttribBinding});
+        try load("glVertexArrayAttribFormat", .{&bindings.vertexArrayAttribFormat});
+        try load("glVertexArrayAttribIFormat", .{&bindings.vertexArrayAttribIFormat});
+        try load("glVertexArrayAttribLFormat", .{&bindings.vertexArrayAttribLFormat});
+        try load("glVertexArrayBindingDivisor", .{&bindings.vertexArrayBindingDivisor});
+        try load("glNamedBufferData", .{&bindings.namedBufferData});
+        try load("glTextureSubImage1D", .{&bindings.textureSubImage1D});
+        try load("glTextureSubImage2D", .{&bindings.textureSubImage2D});
+        try load("glTextureSubImage3D", .{&bindings.textureSubImage3D});
+        try load("glGenerateTextureMipmap", .{&bindings.generateTextureMipmap});
+        try load("glTextureParameterf", .{&bindings.textureParameterf});
+        try load("glTextureParameterfv", .{&bindings.textureParameterfv});
+        try load("glTextureParameteri", .{&bindings.textureParameteri});
+        try load("glTextureParameteriv", .{&bindings.textureParameteriv});
+        try load("glTextureParameterIiv", .{&bindings.textureParameterIiv});
+        try load("glTextureParameterIuiv", .{&bindings.textureParameterIuiv});
     }
 
     // OpenGL 4.6

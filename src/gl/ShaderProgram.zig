@@ -4,7 +4,7 @@ const gl = @import("zopengl").bindings;
 const Allocator = std.mem.Allocator;
 const ArrayList = std.ArrayList;
 
-pub const ShaderStageTarget = enum(u32) {
+pub const Target = enum(u32) {
     Vertex = gl.VERTEX_SHADER,
     Fragment = gl.FRAGMENT_SHADER,
     Geometry = gl.GEOMETRY_SHADER,
@@ -12,19 +12,20 @@ pub const ShaderStageTarget = enum(u32) {
     TesselationEnvironment = gl.TESS_EVALUATION_SHADER,
 };
 
-const ShaderStageUnionTag = enum {
+const AttachStageUnionTag = enum {
     AsSource,
     AsFile,
     AsStage,
 };
 
-const ShaderStageUnion = union(ShaderStageUnionTag) {
+/// Defines what state a shader stage is to be attached to a program.
+const AttachStageUnion = union(AttachStageUnionTag) {
     AsSource: struct {
-        target: ShaderStageTarget,
-        source: [*]const u8,
+        target: Target,
+        source: []const u8,
     },
     AsFile: struct {
-        target: ShaderStageTarget,
+        target: Target,
         file_path: []const u8,
     },
     AsStage: ShaderStage,
@@ -35,12 +36,13 @@ pub const ShaderError = error{
     LinkFailed,
     AlreadyAttached,
     AlreadyLinked,
+    InvalidUniformLocation,
     InvalidUniformType,
     InvalidUniformCount,
-    UniformNotFound,
     OutOfMemory,
 };
 
+/// Lookup table for glUniform* functions, stored by type and value count.
 const UniformFuncsStruct = struct {
     Int: [4]*const fn (location: c_int, count: c_int, value: [*]const c_int) callconv(.C) void,
     UnsignedInt: [4]*const fn (location: c_int, count: c_int, value: [*]const c_uint) callconv(.C) void,
@@ -48,6 +50,7 @@ const UniformFuncsStruct = struct {
     Double: [4]*const fn (location: c_int, count: c_int, value: [*]const f64) callconv(.C) void,
 };
 
+/// Lookup table for glUniformMatrix* functions, stored by type and row/column count.
 const UniformMatrixFuncsStruct = struct {
     Float: [3][3]*const fn (location: c_int, count: c_int, transpose: u8, value: [*c]const f32) callconv(.C) void,
     Double: [3][3]*const fn (location: c_int, count: c_int, transpose: u8, value: [*c]const f64) callconv(.C) void,
@@ -55,16 +58,18 @@ const UniformMatrixFuncsStruct = struct {
 
 pub const ShaderStage = struct {
     shader_id: u32,
-    stage_target: ShaderStageTarget,
+    stage_target: Target,
 
-    pub fn create(target: ShaderStageTarget, source: [*]const u8) ShaderError!ShaderStage {
+    pub fn create(target: Target, source: []const u8) ShaderError!ShaderStage {
         const shader_id = gl.createShader(@intFromEnum(target));
 
         errdefer {
             deleteShader(shader_id);
         }
 
-        gl.shaderSource(shader_id, 1, &[_][*]const u8{source}, null);
+        const c_source: [*:0]const u8 = std.mem.span(@as([*:0]const u8, @ptrCast(source)));
+
+        gl.shaderSource(shader_id, 1, &c_source, &@as(c_int, @intCast(source.len)));
         gl.compileShader(shader_id);
 
         var compiled: c_int = undefined;
@@ -110,6 +115,7 @@ pub const ShaderStage = struct {
 
 pub const ShaderProgram = struct {
     program_id: u32,
+    source: []const u8,
     linked: bool,
     stages: ArrayList(ShaderStage),
 
@@ -118,8 +124,9 @@ pub const ShaderProgram = struct {
 
         return ShaderProgram{
             .program_id = program_id,
+            .source = undefined,
             .linked = false,
-            .stages = try ArrayList(ShaderStage).initCapacity(alloc, @typeInfo(ShaderStageTarget).Enum.fields.len),
+            .stages = try ArrayList(ShaderStage).initCapacity(alloc, @typeInfo(Target).Enum.fields.len),
         };
     }
 
@@ -133,32 +140,32 @@ pub const ShaderProgram = struct {
         self.stages.deinit();
     }
 
-    pub fn attach(self: *@This(), stage_union: ShaderStageUnion) anyerror!void {
+    pub fn attach(self: *@This(), stage_union: AttachStageUnion) anyerror!void {
         if (self.linked) {
             return ShaderError.AlreadyLinked;
         }
 
-        switch (stage_union) {
-            .AsSource => |data| {
-                const stage = try ShaderStage.create(data.target, data.source);
+        const stage = switch (stage_union) {
+            .AsSource => blk: {
+                const stage = try ShaderStage.create(stage_union.AsSource.target, stage_union.AsSource.source);
 
-                try self.attachShader(stage);
+                break :blk stage;
             },
-            .AsFile => |file| {
-                const shader_file = try std.fs.cwd().openFile(file.file_path, .{ .mode = .read_only });
+            .AsFile => blk: {
+                const shader_file = try std.fs.cwd().openFile(stage_union.AsFile.file_path, .{ .mode = .read_only });
                 defer shader_file.close();
 
-                var shader_buffer: [1024]u8 = undefined;
+                var shader_buffer: [4096:0]u8 = undefined;
                 var buffered_reader = std.io.bufferedReader(shader_file.reader());
-                _ = try buffered_reader.reader().readAll(&shader_buffer);
-                const stage = try ShaderStage.create(file.target, &shader_buffer);
+                const buffer_length = try buffered_reader.reader().readAll(&shader_buffer);
+                const stage = try ShaderStage.create(stage_union.AsFile.target, shader_buffer[0..buffer_length]);
 
-                try self.attachShader(stage);
+                break :blk stage;
             },
-            .AsStage => |stage| {
-                try self.attachShader(stage);
-            },
-        }
+            .AsStage => stage_union.AsStage,
+        };
+
+        try self.attachShader(stage);
     }
 
     inline fn attachShader(self: *@This(), stage: ShaderStage) ShaderError!void {
@@ -195,13 +202,23 @@ pub const ShaderProgram = struct {
         gl.useProgram(0);
     }
 
-    pub fn setUniform(self: *@This(), name: [*c]const u8, elements: usize, count: usize, uniform_type: type, value: anytype) ShaderError!void {
+    /// __NOTE__: The uniform will be set against the currently bound shader program.
+    ///
+    /// __Parameters__:
+    /// * _name_: Name of the uniform to set.
+    /// * _element_: The number of elements in the value.
+    /// * _count_: The number of values to set.
+    /// * _uniform_type_: The type of value to set.
+    /// * _value_: The value(s) to set.
+    pub fn setUniform(
+        self: *@This(),
+        name: [*c]const u8,
+        elements: usize,
+        count: usize,
+        uniform_type: type,
+        value: anytype,
+    ) ShaderError!void {
         const location = gl.getUniformLocation(self.program_id, name);
-
-        if (location == -1) {
-            return ShaderError.UniformNotFound;
-        }
-
         const uniform_funcs = UniformFuncsStruct{
             .Int = .{
                 gl.uniform1iv,
@@ -229,6 +246,10 @@ pub const ShaderProgram = struct {
             },
         };
 
+        if (location == -1) {
+            return ShaderError.InvalidUniformLocation;
+        }
+
         if (elements < 1 or elements > 4) {
             return ShaderError.InvalidUniformCount;
         }
@@ -254,10 +275,28 @@ pub const ShaderProgram = struct {
         }
     }
 
-    pub fn setUniformMatrix(self: *@This(), name: [*c]const u8, rows: usize, columns: usize, count: usize, transpose: bool, uniform_type: type, value: anytype) ShaderError!void {
+    /// __NOTE__: The uniform will be set against the currently bound shader program.
+    ///
+    /// __Parameters__:
+    /// * _name_: Name of the uniform to set.
+    /// * _rows_: The number of rows in the matrix(ces).
+    /// * _columns_: The number of columns in the matrix(ces).
+    /// * _count_: The number of matrices to set.
+    /// * _transpose_: Should the rows/columns of the matrix(ces) be [transposed](https://en.wikipedia.org/wiki/Transpose)?
+    /// * _uniform_type_: The type of value contained in the matrix(ces).
+    /// * _value_: The matrix value(s) to set.
+    pub fn setUniformMatrix(
+        self: *@This(),
+        name: [*c]const u8,
+        rows: usize,
+        columns: usize,
+        count: usize,
+        transpose: bool,
+        uniform_type: type,
+        value: anytype,
+    ) ShaderError!void {
         const location = gl.getUniformLocation(self.program_id, name);
-        const transpose_value: u8 = if (transpose) gl.FALSE else gl.TRUE;
-
+        const transpose_value: u8 = if (transpose) gl.TRUE else gl.FALSE;
         const uniform_matrix_funcs = UniformMatrixFuncsStruct{
             .Float = .{
                 .{
@@ -294,6 +333,10 @@ pub const ShaderProgram = struct {
                 },
             },
         };
+
+        if (location == -1) {
+            return ShaderError.InvalidUniformLocation;
+        }
 
         if (rows < 2 or columns < 2 or rows > 4 or columns > 4) {
             return ShaderError.InvalidUniformCount;

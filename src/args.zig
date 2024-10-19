@@ -2,9 +2,9 @@ const std = @import("std");
 
 pub const CLArguments = struct {};
 
-pub fn GetCLArguments() !CLArguments {
-    const args = try std.process.argsAlloc(std.heap.page_allocator);
-    defer std.process.argsFree(std.heap.page_allocator, args);
+pub fn GetCLArguments(alloc: std.mem.Allocator) !CLArguments {
+    const args = try std.process.argsAlloc(alloc);
+    defer std.process.argsFree(alloc, args);
 
     const clArgs: CLArguments = CLArguments{};
 

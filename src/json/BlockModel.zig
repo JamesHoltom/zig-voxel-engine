@@ -11,8 +11,8 @@ pub const BlockModel = struct {
         normal: [3]f32,
     };
 
-    pub fn readFromJson(allocator: std.mem.Allocator, file: []const u8) !BlockModel {
-        const model_file = try std.fs.cwd().openFile(file, .{ .mode = .read_only });
+    pub fn readFromJson(allocator: std.mem.Allocator, file_name: []const u8) !BlockModel {
+        const model_file = try std.fs.cwd().openFile(file_name, .{ .mode = .read_only });
         defer model_file.close();
 
         var model_buffer: [4096]u8 = undefined;

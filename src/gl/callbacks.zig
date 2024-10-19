@@ -2,6 +2,12 @@ const std = @import("std");
 const gl = @import("zopengl").bindings;
 const glfw = @import("zglfw");
 
+/// __Parameters__:
+/// * _source_: The source of the message.
+/// * _message_type_: The type of message.
+/// * _id_: The ID of the message.
+/// * _severity_: The severity of the message.
+/// * _message_: The message string.
 pub fn glMessageCallback(
     source: c_uint,
     message_type: c_uint,

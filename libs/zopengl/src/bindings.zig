@@ -2931,7 +2931,7 @@ pub var multiDrawArraysIndirect: *const fn (
 ) callconv(.C) void = undefined;
 pub var multiDrawElementsIndirect: *const fn (
     mode: Enum,
-    data_type: Enum,
+    type: Enum,
     indirect: [*c]const DrawElementsIndirectCommand,
     drawcount: Sizei,
     stride: Sizei,
@@ -2942,33 +2942,27 @@ pub var bindVertexBuffer: *const fn (
     offset: Intptr,
     stride: Sizei,
 ) callconv(.C) void = undefined;
-pub var vertexAttribBinding: *const fn (
-    attrib_index: Uint,
-    binding_index: Uint,
-) callconv(.C) void = undefined;
+pub var vertexAttribBinding: *const fn (attrib_index: Uint, binding_index: Uint) callconv(.C) void = undefined;
 pub var vertexAttribFormat: *const fn (
     attrib_index: Uint,
     size: Int,
-    attrib_type: Enum,
+    type: Enum,
     normalized: Boolean,
     relative_offset: Uint,
 ) callconv(.C) void = undefined;
 pub var vertexAttribIFormat: *const fn (
     attrib_index: Uint,
     size: Int,
-    attrib_type: Enum,
+    type: Enum,
     relative_offset: Uint,
 ) callconv(.C) void = undefined;
 pub var vertexAttribLFormat: *const fn (
     attrib_index: Uint,
     size: Int,
-    attrib_type: Enum,
+    type: Enum,
     relative_offset: Uint,
 ) callconv(.C) void = undefined;
-pub var vertexBindingDivisor: *const fn (
-    binding_index: Uint,
-    divisor: Uint,
-) callconv(.C) void = undefined;
+pub var vertexBindingDivisor: *const fn (binding_index: Uint, divisor: Uint) callconv(.C) void = undefined;
 
 //--------------------------------------------------------------------------------------------------
 //
@@ -3041,8 +3035,127 @@ pub var bindTextureUnit: *const fn (unit: Uint, texture: Uint) callconv(.C) void
 pub var textureBarrier: *const fn () callconv(.C) void = undefined;
 
 // [JH] Added for use in project.
+pub var createVertexArrays: *const fn (n: Sizei, arrays: [*c]Uint) callconv(.C) void = undefined;
 pub var enableVertexArrayAttrib: *const fn (vao_id: Uint, index: Uint) callconv(.C) void = undefined;
 pub var disableVertexArrayAttrib: *const fn (vao_id: Uint, index: Uint) callconv(.C) void = undefined;
+pub var vertexArrayVertexBuffer: *const fn (
+    vao_id: Uint,
+    binding_index: Uint,
+    buffer: Uint,
+    offset: Intptr,
+    stride: Sizei,
+) callconv(.C) void = undefined;
+pub var vertexArrayVertexBuffers: *const fn (
+    vao_id: Uint,
+    first: Uint,
+    count: Sizei,
+    [*c]Uint,
+    offsets: [*c]Intptr,
+    strides: [*c]Sizei,
+) callconv(.C) void = undefined;
+pub var vertexArrayElementBuffer: *const fn (vao_id: Uint, buffer: Uint) callconv(.C) void = undefined;
+pub var vertexArrayAttribBinding: *const fn (
+    vao_id: Uint,
+    attrib_index: Uint,
+    binding_index: Uint,
+) callconv(.C) void = undefined;
+pub var vertexArrayAttribFormat: *const fn (
+    vao_id: Uint,
+    attrib_index: Uint,
+    size: Int,
+    type: Enum,
+    normalized: Boolean,
+    relative_offset: Uint,
+) callconv(.C) void = undefined;
+pub var vertexArrayAttribIFormat: *const fn (
+    vao_id: Uint,
+    attrib_index: Uint,
+    size: Int,
+    type: Enum,
+    relative_offset: Uint,
+) callconv(.C) void = undefined;
+pub var vertexArrayAttribLFormat: *const fn (
+    vao_id: Uint,
+    attrib_index: Uint,
+    size: Int,
+    type: Enum,
+    relative_offset: Uint,
+) callconv(.C) void = undefined;
+pub var vertexArrayBindingDivisor: *const fn (
+    vao_id: Uint,
+    binding_index: Uint,
+    divisor: Uint,
+) callconv(.C) void = undefined;
+pub var namedBufferData: *const fn (
+    buffer: Uint,
+    size: Sizeiptr,
+    data: ?*const anyopaque,
+    usage: Enum,
+) callconv(.C) void = undefined;
+pub var textureSubImage1D: *const fn (
+    texture: Uint,
+    level: Int,
+    x_offset: Int,
+    width: Sizei,
+    format: Enum,
+    type: Enum,
+    pixels: ?*const anyopaque,
+) callconv(.C) void = undefined;
+pub var textureSubImage2D: *const fn (
+    texture: Uint,
+    level: Int,
+    x_offset: Int,
+    y_offset: Int,
+    width: Sizei,
+    height: Sizei,
+    format: Enum,
+    type: Enum,
+    pixels: ?*const anyopaque,
+) callconv(.C) void = undefined;
+pub var textureSubImage3D: *const fn (
+    texture: Uint,
+    level: Int,
+    x_offset: Int,
+    y_offset: Int,
+    z_offset: Int,
+    width: Sizei,
+    height: Sizei,
+    depth: Sizei,
+    format: Enum,
+    type: Enum,
+    pixels: ?*const anyopaque,
+) callconv(.C) void = undefined;
+pub var textureParameterf: *const fn (
+    texture: Uint,
+    pname: Enum,
+    param: Float,
+) callconv(.C) void = undefined;
+pub var textureParameterfv: *const fn (
+    texture: Uint,
+    pname: Enum,
+    param: [*c]const Float,
+) callconv(.C) void = undefined;
+pub var textureParameteri: *const fn (
+    texture: Uint,
+    pname: Enum,
+    param: Int,
+) callconv(.C) void = undefined;
+pub var textureParameteriv: *const fn (
+    texture: Uint,
+    pname: Enum,
+    param: [*c]const Int,
+) callconv(.C) void = undefined;
+pub var textureParameterIiv: *const fn (
+    texture: Uint,
+    pname: Enum,
+    param: [*c]const Int,
+) callconv(.C) void = undefined;
+pub var textureParameterIuiv: *const fn (
+    texture: Uint,
+    pname: Enum,
+    param: [*c]const Uint,
+) callconv(.C) void = undefined;
+pub var generateTextureMipmap: *const fn (texture: Uint) callconv(.C) void = undefined;
 
 //--------------------------------------------------------------------------------------------------
 //

@@ -147,6 +147,19 @@ fn configureVendorLibraries(exe: *std.Build.Step.Compile, target: std.Build.Reso
     const zpool = b.dependency("zpool", .{});
     exe.root_module.addImport("zpool", zpool.module("root"));
 
+    // This includes zSTBI as a dependency.
+    const zstbi = b.dependency("zstbi", .{});
+    exe.root_module.addImport("zstbi", zstbi.module("root"));
+    exe.linkLibrary(zstbi.artifact("zstbi"));
+
+    // This includes zTracy as a dependency.
+    // const ztracy = b.dependency("ztracy", .{
+    //     .enable_ztracy = true,
+    //     .enable_fibers = true,
+    // });
+    // exe.root_module.addImport("ztracy", ztracy.module("root"));
+    // exe.linkLibrary(ztracy.artifact("tracy"));
+
     // This adds string as a dependency.
     const string = b.dependency("string", .{
         .target = target,

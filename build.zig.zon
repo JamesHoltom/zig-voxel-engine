@@ -9,6 +9,8 @@
         .zmath = .{ .path = "libs/zmath" },
         .zopengl = .{ .path = "libs/zopengl" },
         .zpool = .{ .path = "libs/zpool" },
+        .zstbi = .{ .path = "libs/zstbi" },
+        // .ztracy = .{ .path = "libs/ztracy" },
     },
     .paths = .{
         "build.zig",
